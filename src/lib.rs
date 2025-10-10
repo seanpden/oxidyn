@@ -12,14 +12,13 @@ impl Stock {
         id: &str,
         name: &str,
         initial_value: f64,
-        current_value: f64,
         units: &str,
     ) -> Result<Stock, &'static str> {
         Ok(Stock {
             id: id.to_string(),
             name: name.to_string(),
             initial_value,
-            current_value,
+            current_value: initial_value,
             units: units.to_string(),
         })
     }
