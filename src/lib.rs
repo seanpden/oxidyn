@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Clone)]
 pub struct Stock {
     pub id: String,
@@ -21,5 +23,124 @@ impl Stock {
             current_value: initial_value,
             units: units.to_string(),
         })
+    }
+}
+
+/// A flow is the rate of change between stocks.
+///
+/// Flows can transfer from one stock to another, or they can be
+/// sources (no from_stock) or sinks (no to_stock).
+#[derive(Debug, Clone)]
+pub struct Flow {
+    pub id: String,
+    pub name: String,
+    /// Flow ID of the stock this flow takes from (None for sources)
+    pub from_stock: Option<String>,
+    /// Flow ID of the stock this flow adds to (None for sinks)
+    pub to_stock: Option<String>,
+    pub rate_function: FlowFunction,
+    /// The units of this flow rate (e.g., "people/year", "dollars/month")
+    pub units: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum FlowFunction {
+    Constant(f64),
+
+    /// A linear flow rate based on the value of an input stock.
+    ///
+    /// The flow rate calculation: `slope * input_stock_value + intercept`
+    Linear {
+        slope: f64,
+        intercept: f64,
+        /// The ID of the stock whose value is used as input
+        input_stock: String,
+    },
+}
+
+impl Flow {
+    /// Creates a new flow with a constant rate function.
+    pub fn constant(id: &str, name: &str, rate: f64, units: &str) -> Self {
+        Self {
+            id: id.to_string(),
+            name: name.to_string(),
+            from_stock: None,
+            to_stock: None,
+            rate_function: FlowFunction::Constant(rate),
+            units: units.to_string(),
+        }
+    }
+
+    /// Creates a new flow with a linear rate function.
+    ///
+    /// The flow rate is calculated as: `slope * input_stock_value + intercept`
+    pub fn linear(
+        id: &str,
+        name: &str,
+        slope: f64,
+        intercept: f64,
+        input_stock: &str,
+        units: &str,
+    ) -> Self {
+        Self {
+            id: id.to_string(),
+            name: name.to_string(),
+            from_stock: None,
+            to_stock: None,
+            rate_function: FlowFunction::Linear {
+                slope,
+                intercept,
+                input_stock: input_stock.to_string(),
+            },
+            units: units.to_string(),
+        }
+    }
+
+    pub fn from_stock(mut self, stock_id: &str) -> Self {
+        self.from_stock = Some(stock_id.to_string());
+        self
+    }
+
+    pub fn to_stock(mut self, stock_id: &str) -> Self {
+        self.to_stock = Some(stock_id.to_string());
+        self
+    }
+
+    /// Calculates the current flow rate given a system state.
+    pub fn calculate_rate(&self, state: &SystemState) -> f64 {
+        match &self.rate_function {
+            FlowFunction::Constant(rate) => *rate,
+            FlowFunction::Linear {
+                slope,
+                intercept,
+                input_stock,
+            } => {
+                let input_value = state.get_stock_value(input_stock).unwrap_or(0.0);
+                slope * input_value + intercept
+            }
+        }
+    }
+}
+
+/// Represents the current state of the model.
+#[derive(Debug, Clone, Default)]
+pub struct SystemState {
+    /// Stocks indexed by IDs
+    pub stocks: HashMap<String, Stock>,
+    /// Current sim time
+    pub time: f64,
+}
+
+impl SystemState {
+    pub fn new() -> Self {
+        Self {
+            stocks: HashMap::new(),
+            time: 0.0,
+        }
+    }
+
+    /// Looks up the current value of a stock by ID.
+    pub fn get_stock_value(&self, stock_id: &str) -> Option<f64> {
+        self.stocks.get(stock_id).map(|stock| stock.current_value)
     }
 }

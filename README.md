@@ -49,9 +49,11 @@ This library was initially developed to support my research into modeling cognit
 
 ## Roadmap
 
-- [ ] Basic Stocks
-- [ ] Basic Flows
+- [x] Basic Stocks
+- [x] Basic Flows
 - [ ] Basic Connectors
+- [ ] System State
+- [ ] Basic Models
 - [ ] Main simulation
 - [ ] Model export
 - [ ] Simulation results export
