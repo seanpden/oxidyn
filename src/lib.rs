@@ -143,4 +143,11 @@ impl SystemState {
     pub fn get_stock_value(&self, stock_id: &str) -> Option<f64> {
         self.stocks.get(stock_id).map(|stock| stock.current_value)
     }
+
+    // Sets the stock value
+    pub fn set_stock_value(&mut self, stock_id: &str, value: f64) {
+        if let Some(stock) = self.stocks.get_mut(stock_id) {
+            stock.current_value = value;
+        }
+    }
 }
