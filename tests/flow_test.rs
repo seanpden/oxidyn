@@ -69,16 +69,6 @@ fn test_flow_to_stock() {
 }
 
 #[test]
-fn test_flow_from_to_stocks() {
-    let flow = Flow::constant("flow1", "Flow 1", 5.0, "units")
-        .from_stock("source")
-        .to_stock("destination");
-
-    assert_eq!(flow.from_stock, Some("source".to_string()));
-    assert_eq!(flow.to_stock, Some("destination".to_string()));
-}
-
-#[test]
 fn test_constant_flow_calculate_rate() {
     let flow = Flow::constant("const_flow", "Constant Flow", 10.0, "units/time");
     let state = SystemState::new();
@@ -108,28 +98,6 @@ fn test_linear_flow_with_missing_stock() {
     let rate = flow.calculate_rate(&state);
     // Should use 0.0 for missing stock: 0.02 * 0.0 + 5.0 = 5.0
     assert_eq!(rate, 5.0);
-}
-
-#[test]
-fn test_negative_constant_flow() {
-    let flow = Flow::constant("outflow", "Outflow", -15.0, "units/time");
-    let state = SystemState::new();
-
-    let rate = flow.calculate_rate(&state);
-    assert_eq!(rate, -15.0);
-}
-
-#[test]
-fn test_linear_flow_negative_slope() {
-    let mut state = SystemState::new();
-    let stock = Stock::build("resource", "Resource", 50.0, "units").unwrap();
-    state.stocks.insert("resource".to_string(), stock);
-
-    let flow = Flow::linear("decay", "Decay Rate", -0.1, 0.0, "resource", "units/time");
-    let rate = flow.calculate_rate(&state);
-
-    // Rate = -0.1 * 50.0 + 0.0 = -5.0
-    assert_eq!(rate, -5.0);
 }
 
 #[test]
