@@ -51,10 +51,9 @@ This library was initially developed to support my research into modeling cognit
 
 - [x] Basic Stocks
 - [x] Basic Flows
+- [x] Model, Simulation Loop, System State
+- [ ] Basic Converters
 - [ ] Basic Connectors
-- [ ] System State
-- [ ] Basic Models
-- [ ] Main simulation
 - [ ] Model export
 - [ ] Simulation results export
 - [ ] Converters
