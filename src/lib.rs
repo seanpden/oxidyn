@@ -183,9 +183,11 @@ impl Model {
         self
     }
 
-    pub fn simulate(&mut self, duration: f64) {
+    pub fn simulate(&mut self, duration: f64) -> SimulationResult {
+        let mut result = SimulationResult::new();
         let end_time = self.state.time + duration;
 
+        result.record_state(self.state.time, &self.state);
         while self.state.time < end_time {
             let snapshot = self.state.clone();
 
@@ -216,7 +218,9 @@ impl Model {
             }
 
             self.state.time += self.time_step;
+            result.record_state(self.state.time, &self.state);
         }
+        result
     }
 }
 
@@ -240,7 +244,7 @@ impl SimulationResult {
         for (stock_id, stock) in &state.stocks {
             self.stock_values
                 .entry(stock_id.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(stock.current_value);
         }
     }
