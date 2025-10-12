@@ -151,3 +151,101 @@ impl SystemState {
         }
     }
 }
+
+#[derive(Debug, Clone, Default)]
+pub struct Model {
+    pub name: String,
+    pub state: SystemState,
+    pub flows: HashMap<String, Flow>,
+    pub time_step: f64,
+}
+
+impl Model {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            state: SystemState::new(),
+            flows: HashMap::new(),
+            time_step: 0.1,
+        }
+    }
+
+    pub fn add_stock(&mut self, stock: Stock) -> &mut Self {
+        self.state.stocks.insert(stock.id.clone(), stock);
+        self
+    }
+    pub fn add_flow(&mut self, flow: Flow) -> &mut Self {
+        self.flows.insert(flow.id.clone(), flow);
+        self
+    }
+    pub fn set_time_step(&mut self, dt: f64) -> &mut Self {
+        self.time_step = dt;
+        self
+    }
+
+    pub fn simulate(&mut self, duration: f64) -> SimulationResult {
+        let mut result = SimulationResult::new();
+        let end_time = self.state.time + duration;
+
+        result.record_state(self.state.time, &self.state);
+        while self.state.time < end_time {
+            let snapshot = self.state.clone();
+
+            let mut derivatives = HashMap::new();
+            for stock_id in self.state.stocks.keys() {
+                derivatives.insert(stock_id.clone(), 0.0);
+            }
+
+            for flow in self.flows.values() {
+                let rate = flow.calculate_rate(&snapshot);
+
+                if let Some(from_stock) = &flow.from_stock {
+                    if let Some(derivative) = derivatives.get_mut(from_stock) {
+                        *derivative -= rate;
+                    }
+                }
+                if let Some(to_stock) = &flow.to_stock {
+                    if let Some(derivative) = derivatives.get_mut(to_stock) {
+                        *derivative += rate;
+                    }
+                }
+            }
+
+            for (stock_id, derivative) in derivatives {
+                if let Some(stock) = self.state.stocks.get_mut(&stock_id) {
+                    stock.current_value += derivative * self.time_step;
+                }
+            }
+
+            self.state.time += self.time_step;
+            result.record_state(self.state.time, &self.state);
+        }
+        result
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct SimulationResult {
+    pub time_series: Vec<f64>,
+    pub stock_values: HashMap<String, Vec<f64>>,
+}
+
+impl SimulationResult {
+    pub fn new() -> Self {
+        Self {
+            time_series: Vec::new(),
+            stock_values: HashMap::new(),
+        }
+    }
+
+    pub fn record_state(&mut self, time: f64, state: &SystemState) {
+        self.time_series.push(time);
+
+        for (stock_id, stock) in &state.stocks {
+            self.stock_values
+                .entry(stock_id.clone())
+                .or_default()
+                .push(stock.current_value);
+        }
+    }
+}
