@@ -139,6 +139,10 @@ impl SystemState {
         }
     }
 
+    pub fn get_stock_names(&self) -> Vec<&str> {
+        self.stocks.keys().map(|k| k.as_str()).collect()
+    }
+
     /// Looks up the current value of a stock by ID.
     pub fn get_stock_value(&self, stock_id: &str) -> Option<f64> {
         self.stocks.get(stock_id).map(|stock| stock.current_value)
@@ -246,6 +250,51 @@ impl SimulationResult {
                 .entry(stock_id.clone())
                 .or_default()
                 .push(stock.current_value);
+        }
+    }
+
+    pub fn print_summary(&self) {
+        println!("Simulation Results Summary:");
+        println!(
+            "Duration: {:.2} time units",
+            self.time_series.last().unwrap_or(&0.0)
+        );
+        println!("Time steps: {}", self.time_series.len());
+
+        for (stock_id, values) in &self.stock_values {
+            let initial = values.first().unwrap_or(&0.0);
+            let final_val = values.last().unwrap_or(&0.0);
+            println!("Stock '{}': {:.3} -> {:.3}", stock_id, initial, final_val);
+        }
+    }
+
+    pub fn print_detailed(&self, stock_names: &[&str]) {
+        println!("\nDetailed Results:");
+        print!("{:>8}", "Time");
+        for name in stock_names {
+            print!("{:>12}", name);
+        }
+        println!();
+
+        // Calculate and print dynamic separator
+        let total_width = 8 + stock_names.len() * 12;
+        println!("{}", "-".repeat(total_width));
+
+        // Print data rows
+        for (i, time) in self.time_series.iter().enumerate() {
+            print!("{:8.2}", time);
+            for stock_id in stock_names {
+                if let Some(values) = self.stock_values.get(*stock_id) {
+                    if i < values.len() {
+                        print!("{:12.3}", values[i]);
+                    } else {
+                        print!("{:>12}", ""); // Empty cell if no data
+                    }
+                } else {
+                    print!("{:>12}", ""); // Empty cell if stock not found
+                }
+            }
+            println!();
         }
     }
 }

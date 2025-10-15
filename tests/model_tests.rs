@@ -54,6 +54,10 @@ fn test_stella_population_example() {
 
     let mut res = model.simulate(100.0);
 
+    res.print_summary();
+    res.print_detailed(&["population"]);
+    // res.print_detailed();
+
     let expected_final_value = 664;
     let actual_final_value = res
         .stock_values
