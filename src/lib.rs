@@ -248,4 +248,47 @@ impl SimulationResult {
                 .push(stock.current_value);
         }
     }
+
+    pub fn print_summary(&self) {
+        println!("Simulation Results Summary:");
+        println!(
+            "Duration: {:.2} time units",
+            self.time_series.last().unwrap_or(&0.0)
+        );
+        println!("Time steps: {}", self.time_series.len());
+
+        for (stock_id, values) in &self.stock_values {
+            let initial = values.first().unwrap_or(&0.0);
+            let final_val = values.last().unwrap_or(&0.0);
+            println!("Stock '{}': {:.3} -> {:.3}", stock_id, initial, final_val);
+        }
+    }
+
+    pub fn print_detailed(&self, stocks_to_show: &[&str]) {
+        println!("\nDetailed Results:");
+        println!(
+            "{:>8} {:>12} {:>12} {:>12} {:>12} {:>12} {:>12} {:>12}",
+            "Time",
+            "Knowledge",
+            "Attention",
+            "Motivation",
+            "CogLoad",
+            "Performance",
+            "Confidence",
+            "Strategy"
+        );
+        println!("{}", "-".repeat(80));
+
+        for (i, time) in self.time_series.iter().enumerate() {
+            print!("{:8.2}", time);
+            for stock_id in stocks_to_show {
+                if let Some(values) = self.stock_values.get(*stock_id) {
+                    if i < values.len() {
+                        print!("{:12.3}", values[i]);
+                    }
+                }
+            }
+            println!();
+        }
+    }
 }
