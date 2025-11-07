@@ -80,7 +80,7 @@ fn test_constant_flow_calculate_rate() {
 #[test]
 fn test_linear_flow_calculate_rate() {
     let mut state = SystemState::new();
-    let stock = Stock::build("pop", "Population", 100.0, "people").unwrap();
+    let stock = Stock::new("pop", "Population", 100.0, "people");
     state.stocks.insert("pop".to_string(), stock);
 
     let flow = Flow::linear("growth", "Growth Rate", 0.02, 5.0, "pop", "people/year");

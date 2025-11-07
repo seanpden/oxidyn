@@ -7,7 +7,7 @@ fn test_simple_constant() {
     let mut model = Model::new("my_model");
 
     model
-        .add_stock(Stock::build("amount", "Amount", 0., "units").unwrap())
+        .add_stock(Stock::new("amount", "Amount", 0., "units"))
         .add_flow(Flow::constant("input", "Input", 2., "units").to_stock("amount"))
         .add_flow(Flow::constant("output", "Output", 1., "units").from_stock("amount"))
         .set_time_step(1.);
@@ -27,7 +27,7 @@ fn test_stella_population_example() {
     let mut model = Model::new("stella_model");
 
     model
-        .add_stock(Stock::build("population", "Population", 25., "people").unwrap())
+        .add_stock(Stock::new("population", "Population", 25., "people"))
         .add_flow(
             Flow::linear(
                 "births",
