@@ -1,5 +1,4 @@
 use oxidyn::Stock;
-use std::process;
 
 #[test]
 fn test_stock_creation() {
@@ -9,10 +8,7 @@ fn test_stock_creation() {
     let current_value = 1.0;
     let units = "UNITS";
 
-    let stock = Stock::build(id, name, initial_value, units).unwrap_or_else(|err| {
-        eprintln!("Problem creating stock `ID`: {err}");
-        process::exit(1);
-    });
+    let stock = Stock::new(id, name, initial_value, units);
 
     assert_eq!(stock.id, id);
     assert_eq!(stock.name, name);
