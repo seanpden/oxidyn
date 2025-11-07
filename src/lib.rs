@@ -7,6 +7,10 @@ pub struct Stock {
     pub initial_value: f64,
     pub current_value: f64,
     pub units: String,
+    /// Minimum constraint, optional
+    pub min_value: Option<f64>,
+    /// Maximum constraint, optional
+    pub max_value: Option<f64>,
 }
 
 impl Stock {
@@ -17,7 +21,18 @@ impl Stock {
             initial_value,
             current_value: initial_value,
             units: units.to_string(),
+            min_value: None,
+            max_value: None,
         }
+    }
+
+    pub fn with_min(mut self, min: f64) -> Self {
+        self.min_value = Some(min);
+        self
+    }
+    pub fn with_max(mut self, max: f64) -> Self {
+        self.max_value = Some(max);
+        self
     }
 }
 
@@ -212,7 +227,17 @@ impl Model {
 
             for (stock_id, derivative) in derivatives {
                 if let Some(stock) = self.state.stocks.get_mut(&stock_id) {
-                    stock.current_value += derivative * self.time_step;
+                    let mut new_value = stock.current_value + derivative * self.time_step;
+
+                    if let Some(min) = stock.min_value {
+                        new_value = new_value.max(min);
+                    }
+
+                    if let Some(max) = stock.max_value {
+                        new_value = new_value.min(max);
+                    }
+
+                    stock.current_value = new_value;
                 }
             }
 
