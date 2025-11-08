@@ -36,6 +36,81 @@ impl Stock {
     }
 }
 
+/// represents multiple related stocks.
+///
+/// useful for modeling discrete entities (like items in working memory)
+/// where each position has its own state but follows similar dynamics.
+#[derive(Debug, Clone)]
+pub struct StockArray {
+    pub base_id: String,
+    pub name: String,
+    pub size: usize,
+    pub initial_values: Vec<f64>,
+    pub units: String,
+    pub min_value: Option<f64>,
+    pub max_value: Option<f64>,
+}
+
+impl StockArray {
+    /// new stock array with uniform values
+    pub fn new(base_id: &str, name: &str, size: usize, initial_value: f64, units: &str) -> Self {
+        StockArray {
+            base_id: base_id.to_string(),
+            name: name.to_string(),
+            size,
+            initial_values: vec![initial_value; size],
+            units: units.to_string(),
+            min_value: None,
+            max_value: None,
+        }
+    }
+
+    /// new stock array with different values
+    pub fn from_values(base_id: &str, name: &str, values: Vec<f64>, units: &str) -> Self {
+        let size = values.len();
+        StockArray {
+            base_id: base_id.to_string(),
+            name: name.to_string(),
+            size,
+            initial_values: values,
+            units: units.to_string(),
+            min_value: None,
+            max_value: None,
+        }
+    }
+
+    pub fn with_min(mut self, min: f64) -> Self {
+        self.min_value = Some(min);
+        self
+    }
+
+    pub fn with_max(mut self, max: f64) -> Self {
+        self.max_value = Some(max);
+        self
+    }
+
+    /// Converts the stock array into individual Stock instances.
+    /// Each stock has an ID of the form "base_id[index]"
+    pub fn expand(&self) -> Vec<Stock> {
+        (0..self.size)
+            .map(|i| Stock {
+                id: format!("{}[{}]", self.base_id, i),
+                name: format!("{} [{}]", self.name, i),
+                initial_value: self.initial_values[i],
+                current_value: self.initial_values[i],
+                units: self.units.clone(),
+                min_value: self.min_value,
+                max_value: self.max_value,
+            })
+            .collect()
+    }
+
+    /// generates an indexed stock id for reference
+    pub fn stock_id(&self, index: usize) -> String {
+        format!("{}[{}]", self.base_id, index)
+    }
+}
+
 /// A flow is the rate of change between stocks.
 ///
 /// Flows can transfer from one stock to another, or they can be
@@ -188,6 +263,15 @@ impl Model {
         self.state.stocks.insert(stock.id.clone(), stock);
         self
     }
+
+    /// Adds a stock array to the model by expanding it into individual stocks.
+    pub fn add_stock_array(&mut self, stock_array: StockArray) -> &mut Self {
+        for stock in stock_array.expand() {
+            self.state.stocks.insert(stock.id.clone(), stock);
+        }
+        self
+    }
+
     pub fn add_flow(&mut self, flow: Flow) -> &mut Self {
         self.flows.insert(flow.id.clone(), flow);
         self
